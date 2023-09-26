@@ -1,47 +1,53 @@
 import tkinter as tk
+import psutil
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import psutil
+import time
 
-# Función para obtener la temperatura del procesador en grados Celsius
-def get_cpu_temperature():
+# Función para obtener la temperatura del procesador
+def get_cpu_temp():
     try:
         temp = psutil.sensors_temperatures()['coretemp'][0].current
         return temp
-    except (KeyError, FileNotFoundError, AttributeError):
+    except Exception as e:
+        print("Error al obtener la temperatura:", e)
         return None
 
-# Función para actualizar el gráfico
-def actualizar_grafico():
-    temperatura = get_cpu_temperature()
-    if temperatura is not None:
-        etiqueta_temperatura.config(text=f"Temperatura del procesador: {temperatura} °C")
-        historial_temperatura.append(temperatura)
+# Función para actualizar el gráfico de temperatura
+def update_plot():
+    temp = get_cpu_temp()
+    if temp is not None:
+        temp_values.append(temp)
+        temp_labels.append(time.strftime("%H:%M:%S"))
+        if len(temp_values) > 10:
+            temp_values.pop(0)
+            temp_labels.pop(0)
         ax.clear()
-        ax.plot(historial_temperatura, marker='o', linestyle='-')
+        ax.plot(temp_labels, temp_values, marker='o', linestyle='-')
         ax.set_xlabel('Tiempo')
         ax.set_ylabel('Temperatura (°C)')
+        ax.set_title('Temperatura del Procesador')
         canvas.draw()
-    ventana.after(1000, actualizar_grafico)  # Actualiza cada 1 segundo
+    root.after(1000, update_plot)
 
-# Crear la ventana principal
-ventana = tk.Tk()
-ventana.title("Monitor de Temperatura del Procesador")
+# Crear la ventana de la aplicación
+root = tk.Tk()
+root.title("Monitor de Temperatura del Procesador")
 
-# Crear una etiqueta para mostrar la temperatura actual
-etiqueta_temperatura = tk.Label(ventana, text="", font=("Helvetica", 16))
-etiqueta_temperatura.pack(pady=10)
+# Crear un gráfico para mostrar la temperatura
+fig, ax = plt.subplots()
+temp_values = []
+temp_labels = []
 
-# Crear un gráfico para mostrar el historial de temperaturas
-fig, ax = plt.subplots(figsize=(6, 4))
-canvas = FigureCanvasTkAgg(fig, master=ventana)
-canvas_widget = canvas.get_tk_widget()
-canvas_widget.pack()
+canvas = FigureCanvasTkAgg(fig, master=root)
+canvas.get_tk_widget().pack()
 
-historial_temperatura = []
+# Botón para salir de la aplicación
+exit_button = tk.Button(root, text="Salir", command=root.quit)
+exit_button.pack()
 
 # Iniciar la actualización del gráfico
-actualizar_grafico()
+update_plot()
 
-# Iniciar el bucle principal
-ventana.mainloop()
+# Iniciar la aplicación
+root.mainloop()
