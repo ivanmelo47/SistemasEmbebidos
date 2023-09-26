@@ -1,53 +1,60 @@
 import tkinter as tk
-import psutil
+from smbus2 import SMBus
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import time
 
-# Función para obtener la temperatura del procesador
-def get_cpu_temp():
-    try:
-        temp = psutil.sensors_temperatures()['coretemp'][0].current
-        return temp
-    except Exception as e:
-        print("Error al obtener la temperatura:", e)
-        return None
+# Dirección I2C del sensor GY-21 (puede variar)
+address = 0x40
 
-# Función para actualizar el gráfico de temperatura
-def update_plot():
-    temp = get_cpu_temp()
-    if temp is not None:
-        temp_values.append(temp)
-        temp_labels.append(time.strftime("%H:%M:%S"))
-        if len(temp_values) > 10:
-            temp_values.pop(0)
-            temp_labels.pop(0)
-        ax.clear()
-        ax.plot(temp_labels, temp_values, marker='o', linestyle='-')
-        ax.set_xlabel('Tiempo')
-        ax.set_ylabel('Temperatura (°C)')
-        ax.set_title('Temperatura del Procesador')
-        canvas.draw()
-    root.after(1000, update_plot)
+# Inicializar el bus I2C
+bus = SMBus(1)
 
-# Crear la ventana de la aplicación
+# Listas para almacenar datos de temperatura y tiempo
+temperature_data = []
+time_data = []
+
+# Función para leer datos de temperatura
+def read_temperature():
+    data = bus.read_i2c_block_data(address, 0xE5, 2)
+    raw_temp = (data[0] << 8) + data[1]
+    temperature = ((175.72 * raw_temp) / 65536.0) - 46.85
+    return temperature
+
+# Función para actualizar la temperatura y la gráfica
+def update_temperature():
+    temp = read_temperature()
+    temperature_data.append(temp)
+    time_data.append(len(temperature_data))
+
+    # Actualizar la etiqueta de temperatura
+    temperature_label.config(text=f"Temperatura: {temp}°C")
+
+    # Actualizar la gráfica
+    ax.clear()
+    ax.plot(time_data, temperature_data, marker='o', linestyle='-')
+    ax.set_xlabel('Tiempo')
+    ax.set_ylabel('Temperatura (°C)')
+    canvas.draw()
+
+    root.after(2000, update_temperature)  # Actualizar cada 2 segundos
+
+# Crear la ventana principal
 root = tk.Tk()
-root.title("Monitor de Temperatura del Procesador")
+root.title("Sensor GY-21")
 
-# Crear un gráfico para mostrar la temperatura
-fig, ax = plt.subplots()
-temp_values = []
-temp_labels = []
+# Etiqueta para mostrar la temperatura
+temperature_label = tk.Label(root, text="", font=("Arial", 24))
+temperature_label.pack(padx=20, pady=20)
 
+# Configurar la gráfica
+fig, ax = plt.subplots(figsize=(6, 4))
 canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.get_tk_widget().pack()
+canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+ax.set_xlabel('Tiempo')
+ax.set_ylabel('Temperatura (°C)')
 
-# Botón para salir de la aplicación
-exit_button = tk.Button(root, text="Salir", command=root.quit)
-exit_button.pack()
+# Iniciar la actualización de temperatura y la gráfica
+update_temperature()
 
-# Iniciar la actualización del gráfico
-update_plot()
-
-# Iniciar la aplicación
+# Ejecutar la aplicación
 root.mainloop()
