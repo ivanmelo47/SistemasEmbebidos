@@ -1,60 +1,73 @@
+import smbus2
+import time
 import tkinter as tk
-from smbus2 import SMBus
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
-# Dirección I2C del sensor GY-21 (puede variar)
+# Configura los pines GPIO
+# (Asumiendo que utilizas los pines GPIO 27 y GPIO 22)
+SDA_PIN = 27
+SCL_PIN = 22
+
+# Dirección I2C del sensor GY-21
 address = 0x40
 
 # Inicializar el bus I2C
-bus = SMBus(1)
+bus = smbus2.SMBus(1)
 
-# Listas para almacenar datos de temperatura y tiempo
-temperature_data = []
-time_data = []
-
-# Función para leer datos de temperatura
-def read_temperature():
+# Función para leer datos de temperatura y humedad
+def read_sensor_data():
     data = bus.read_i2c_block_data(address, 0xE5, 2)
     raw_temp = (data[0] << 8) + data[1]
     temperature = ((175.72 * raw_temp) / 65536.0) - 46.85
     return temperature
 
-# Función para actualizar la temperatura y la gráfica
-def update_temperature():
-    temp = read_temperature()
-    temperature_data.append(temp)
-    time_data.append(len(temperature_data))
+# Función para actualizar los valores de temperatura y humedad
+def update_values():
+    temp = read_sensor_data()
+    humidity_label.config(text=f"Temperatura: {temp:.2f}°C")
+    humidity = 0  # Reemplaza con la lectura real de la humedad
+    humidity_label.config(text=f"Humedad: {humidity:.2f}%")
+    update_graph(temp, humidity)
+    root.after(2000, update_values)  # Actualiza cada 2 segundos
 
-    # Actualizar la etiqueta de temperatura
-    temperature_label.config(text=f"Temperatura: {temp}°C")
-
-    # Actualizar la gráfica
+# Función para actualizar el gráfico
+def update_graph(temp, humidity):
+    temp_data.append(temp)
+    humidity_data.append(humidity)
+    if len(temp_data) > 10:
+        temp_data.pop(0)
+        humidity_data.pop(0)
     ax.clear()
-    ax.plot(time_data, temperature_data, marker='o', linestyle='-')
-    ax.set_xlabel('Tiempo')
-    ax.set_ylabel('Temperatura (°C)')
-    canvas.draw()
+    ax.plot(range(len(temp_data)), temp_data, label='Temperatura')
+    ax.plot(range(len(humidity_data)), humidity_data, label='Humedad')
+    ax.set_xlabel('Muestras')
+    ax.set_ylabel('Valor')
+    ax.set_title('Temperatura y Humedad')
+    ax.legend()
 
-    root.after(2000, update_temperature)  # Actualizar cada 2 segundos
-
-# Crear la ventana principal
+# Crear la ventana principal de Tkinter
 root = tk.Tk()
 root.title("Sensor GY-21")
 
-# Etiqueta para mostrar la temperatura
-temperature_label = tk.Label(root, text="", font=("Arial", 24))
-temperature_label.pack(padx=20, pady=20)
+# Etiquetas para mostrar la temperatura y la humedad
+temperature_label = tk.Label(root, text="Temperatura: ", font=("Helvetica", 14))
+temperature_label.pack()
+humidity_label = tk.Label(root, text="Humedad: ", font=("Helvetica", 14))
+humidity_label.pack()
 
-# Configurar la gráfica
-fig, ax = plt.subplots(figsize=(6, 4))
+# Configurar el gráfico
+fig = Figure(figsize=(6, 4), dpi=100)
+ax = fig.add_subplot(111)
 canvas = FigureCanvasTkAgg(fig, master=root)
-canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-ax.set_xlabel('Tiempo')
-ax.set_ylabel('Temperatura (°C)')
+canvas.get_tk_widget().pack()
 
-# Iniciar la actualización de temperatura y la gráfica
-update_temperature()
+# Inicializar listas de datos para el gráfico
+temp_data = []
+humidity_data = []
 
-# Ejecutar la aplicación
+# Iniciar la actualización de valores y gráfico
+update_values()
+
+# Ejecutar la aplicación Tkinter
 root.mainloop()
