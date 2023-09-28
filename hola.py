@@ -1,32 +1,24 @@
-import smbus2
+import smbus
 import time
-import RPi.GPIO as GPIO
 
-# Configura los pines GPIO
-GPIO.setmode(GPIO.BCM)
-SDA_PIN = 27
-SCL_PIN = 22
-GPIO.setup(SDA_PIN, GPIO.IN)
-GPIO.setup(SCL_PIN, GPIO.IN)
+# Dirección I2C del sensor GY-21 (HTU21D)
+sensor_address = 0x40
 
-# Dirección I2C del sensor GY-21 (puede variar)
-address = 0x40
+# Inicializa el bus I2C (puedes usar 0 o 1, dependiendo de tu Raspberry Pi)
+bus = smbus.SMBus(1)
 
-# Inicializar el bus I2C
-bus = smbus2.SMBus(1)
+# Comando para leer la temperatura (sin resolución adicional)
+bus.write_byte(sensor_address, 0xF3)
 
-# Leer datos de temperatura y humedad
-def read_sensor_data():
-    data = bus.read_i2c_block_data(address, 0xE5, 2)
-    raw_temp = (data[0] << 8) + data[1]
-    temperature = ((175.72 * raw_temp) / 65536.0) - 46.85
-    return temperature
+# Espera un momento para que el sensor realice la medición
+time.sleep(0.5)
 
-try:
-    while True:
-        temp = read_sensor_data()
-        print(f"Temperatura: {temp}°C")
-        time.sleep(2)  # Esperar 2 segundos antes de la siguiente lectura
+# Lee 2 bytes de datos de temperatura
+data = bus.read_i2c_block_data(sensor_address, 0x00, 2)
 
-except KeyboardInterrupt:
-    GPIO.cleanup()  # Limpia los pines GPIO al finalizar
+# Calcula la temperatura
+temp_raw = (data[0] << 8) + data[1]
+temp = -46.85 + (175.72 * temp_raw / 65536.0)
+
+# Imprime la temperatura en Celsius
+print(f"Temperatura: {temp:.2f} °C")
