@@ -1,24 +1,24 @@
-import smbus
-import time
+import adafruit_dht
 
-# Dirección I2C del sensor GY-21 (HTU21D)
-sensor_address = 0x40
+# Especifica el pin GPIO al que está conectado el sensor (por ejemplo, GPIO 4)
+pin = 4
 
-# Inicializa el bus I2C (puedes usar 0 o 1, dependiendo de tu Raspberry Pi)
-bus = smbus.SMBus(1)
+# Crea una instancia del sensor GY-21 en el pin especificado
+sensor = adafruit_dht.DHT22(pin)
 
-# Comando para leer la temperatura (sin resolución adicional)
-bus.write_byte(sensor_address, 0xF3)
+try:
+    # Lee los datos de temperatura y humedad
+    temperature_c = sensor.temperature
+    humidity = sensor.humidity
 
-# Espera un momento para que el sensor realice la medición
-time.sleep(0.5)
+    # Imprime los datos
+    print(f"Temperatura: {temperature_c}°C")
+    print(f"Humedad: {humidity}%")
 
-# Lee 2 bytes de datos de temperatura
-data = bus.read_i2c_block_data(sensor_address, 0x00, 2)
+except RuntimeError as e:
+    # En caso de error, muestra un mensaje de error
+    print(f"Error de lectura del sensor: {e}")
 
-# Calcula la temperatura
-temp_raw = (data[0] << 8) + data[1]
-temp = -46.85 + (175.72 * temp_raw / 65536.0)
-
-# Imprime la temperatura en Celsius
-print(f"Temperatura: {temp:.2f} °C")
+finally:
+    # Libera los recursos del sensor
+    sensor.exit()
