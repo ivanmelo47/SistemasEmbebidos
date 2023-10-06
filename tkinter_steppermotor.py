@@ -29,17 +29,12 @@ sequence = [
 #Secuencia en reversa
 sequence_ccw = list(reversed(sequence))
 
-# Grados que dara vuelta el motor
-grados = 360
-
 # Calcula el número de pasos para una vuelta completa (360 grados)
-pasos_por_vuelta = ((grados * 510)/360)  # Esto es para el motor 28BYJ-48
+pasos_por_vuelta = 510  # Esto es para el motor 28BYJ-48
 
 # Define la velocidad (ajusta este valor para cambiar la velocidad)
-velocidad_s = 1  # Tiempo de espera en segundos entre pasos (mayor valor = menor velocidad)
+velocidad_s = 0.001  # Tiempo de espera en segundos entre pasos (mayor valor = menor velocidad)
 
-
-velocidad_s = velocidad_s / 1000
 # Crea una ventana de Tkinter
 window = tk.Tk()
 window.title("Control de Motor Paso a Paso")
