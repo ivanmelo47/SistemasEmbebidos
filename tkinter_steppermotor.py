@@ -3,10 +3,10 @@ import RPi.GPIO as GPIO
 import time
 
 # Configura los pines GPIO
-IN1 = 2  # Pin IN1 de la placa ULN2003A (ajusta según tu configuración)
-IN2 = 3  # Pin IN2 de la placa ULN2003A (ajusta según tu configuración)
-IN3 = 4  # Pin IN3 de la placa ULN2003A (ajusta según tu configuración)
-IN4 = 17  # Pin IN4 de la placa ULN2003A (ajusta según tu configuración)
+IN1 = 26  # Pin IN1 de la placa ULN2003A (ajusta según tu configuración)
+IN2 = 19  # Pin IN2 de la placa ULN2003A (ajusta según tu configuración)
+IN3 = 13  # Pin IN3 de la placa ULN2003A (ajusta según tu configuración)
+IN4 = 6  # Pin IN4 de la placa ULN2003A (ajusta según tu configuración)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(IN1, GPIO.OUT)
