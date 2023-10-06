@@ -9,10 +9,12 @@ IN2 = 3  # Pin GPIO para IN2
 IN3 = 4  # Pin GPIO para IN3
 IN4 = 17  # Pin GPIO para IN4
 
-setup(IN1, OUT)
-setup(IN2, OUT)
-setup(IN3, OUT)
-setup(IN4, OUT)
+# Configura los pines GPIO como salida
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(IN1, GPIO.OUT)
+GPIO.setup(IN2, GPIO.OUT)
+GPIO.setup(IN3, GPIO.OUT)
+GPIO.setup(IN4, GPIO.OUT)
 
 # Secuencia de pasos para girar el motor en sentido horario
 sequence = [
