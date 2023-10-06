@@ -18,19 +18,30 @@ GPIO.setup(IN4, GPIO.OUT)
 window = tk.Tk()
 window.title("Control de Motor Paso a Paso")
 
+# Secuencia de pasos para girar el motor en sentido horario
+sequence = [
+    (1, 0, 0, 0),
+    (1, 1, 0, 0),
+    (0, 1, 0, 0),
+    (0, 1, 1, 0),
+    (0, 0, 1, 0),
+    (0, 0, 1, 1),
+    (0, 0, 0, 1),
+    (1, 0, 0, 1),
+]
+
 # Función para mover el motor en sentido horario
 def move_clockwise():
-    GPIO.output(IN1, 1)
-    GPIO.output(IN2, 0)
-    GPIO.output(IN3, 0)
-    GPIO.output(IN4, 0)
+    for step in sequence:
+        GPIO.output(IN1, step[0])
+        GPIO.output(IN2, step[1])
+        GPIO.output(IN3, step[2])
+        GPIO.output(IN4, step[3])
+        time.sleep(0.001)  # Ajusta la velocidad aquí
 
-# Función para mover el motor en sentido antihorario
+# Función para mover el motor en sentido antihorario (detenido en este caso)
 def move_counterclockwise():
-    GPIO.output(IN1, 0)
-    GPIO.output(IN2, 0)
-    GPIO.output(IN3, 0)
-    GPIO.output(IN4, 1)
+    stop_motor()
 
 # Función para detener el motor
 def stop_motor():
