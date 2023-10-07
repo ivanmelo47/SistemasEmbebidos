@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import struct, array, time, io, fcntl
 
+#hola 
+
 I2C_SLAVE=0x0703
 HTU21D_ADDR = 0x40
 CMD_READ_TEMP_HOLD = b"\xE3"  # Usar b antes de la cadena para convertirla en bytes
