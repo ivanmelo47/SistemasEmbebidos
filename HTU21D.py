@@ -60,16 +60,15 @@ class HTU21D():
 		return {'h' : humidity}
 	
 
-from HTU21D import HTU21D
 HTU21D = HTU21D()
 
 while True:
 	HTU21D.writehumidity()
 	hum = HTU21D.readhumidity()
-	print "Relative Humidity : %.2f %%"%(hum['h'])
+	print("Relative Humidity : %.2f %%" % (hum['h']))
 	HTU21D.writetemperature()
 	temp = HTU21D.readtemperature()
-	print "Temperature in Celsius : %.2f C"%(temp['c'])
-	print "Temperature in Fahrenheit : %.2f F"%(temp['f'])
-	print " ************************************* "
+	print("Temperature in Celsius : %.2f C" % (temp['c']))
+	print("Temperature in Fahrenheit : %.2f F" % (temp['f']))
+	print(" ************************************* ")
 	time.sleep(1)
