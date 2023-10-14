@@ -5,8 +5,8 @@ import asyncio
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import ttk
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -54,27 +54,15 @@ time_data = []
 
 # Funciones para actualizar las gráficas de temperatura y humedad
 def update_temperature_plot():
-    temperature_fig.clear()
-    ax1 = temperature_fig.add_subplot(111)
-    ax1.plot(time_data, temperature_data, label='Temperatura (°C)')
-    ax1.set_xlabel('Tiempo (segundos)')
-    ax1.set_ylabel('Temperatura (°C)')
-    ax1.legend()
+    temperature_canvas.draw()
 
 def update_humidity_plot():
-    humidity_fig.clear()
-    ax2 = humidity_fig.add_subplot(111)
-    ax2.plot(time_data, humidity_data, label='Humedad (%)')
-    ax2.set_xlabel('Tiempo (segundos)')
-    ax2.set_ylabel('Humedad (%)')
-    ax2.legend()
+    humidity_canvas.draw()
 
 # Función para actualizar las gráficas
 def update_plots():
     update_temperature_plot()
     update_humidity_plot()
-    temperature_canvas.draw()
-    humidity_canvas.draw()
 
 async def control_motor():
     global vuelta
@@ -134,7 +122,7 @@ if __name__ == "__main__":
     # Crear una figura para la humedad
     humidity_fig = Figure(figsize=(5, 3), dpi=100)
     humidity_canvas = FigureCanvasTkAgg(humidity_fig, master=root)
-    humidity_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+    humidity_canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     plt.ion()  # Habilita el modo interactivo de matplotlib
 
