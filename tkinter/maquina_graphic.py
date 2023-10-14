@@ -3,6 +3,10 @@ import Adafruit_DHT
 import time
 import asyncio
 import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import ttk
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -50,25 +54,27 @@ time_data = []
 
 # Funciones para actualizar las gráficas de temperatura y humedad
 def update_temperature_plot():
-    plt.subplot(2, 1, 1)  # Subgráfico 1 (temperatura)
-    #plt.plot(time_data, temperature_data, label='Temperatura (°C)')
-    plt.xlabel('Tiempo (segundos)')
-    plt.ylabel('Temperatura (°C)')
-    plt.legend()
+    temperature_fig.clear()
+    ax1 = temperature_fig.add_subplot(111)
+    ax1.plot(time_data, temperature_data, label='Temperatura (°C)')
+    ax1.set_xlabel('Tiempo (segundos)')
+    ax1.set_ylabel('Temperatura (°C)')
+    ax1.legend()
 
 def update_humidity_plot():
-    plt.subplot(2, 1, 2)  # Subgráfico 2 (humedad)
-    #plt.plot(time_data, humidity_data, label='Humedad (%)')
-    plt.xlabel('Tiempo (segundos)')
-    plt.ylabel('Humedad (%)')
-    plt.legend()
+    humidity_fig.clear()
+    ax2 = humidity_fig.add_subplot(111)
+    ax2.plot(time_data, humidity_data, label='Humedad (%)')
+    ax2.set_xlabel('Tiempo (segundos)')
+    ax2.set_ylabel('Humedad (%)')
+    ax2.legend()
 
-# Función para actualizar la gráfica
-def update_plot():
+# Función para actualizar las gráficas
+def update_plots():
     update_temperature_plot()
     update_humidity_plot()
-    plt.tight_layout()  # Ajustar automáticamente el espaciado
-    plt.pause(1)
+    temperature_canvas.draw()
+    humidity_canvas.draw()
 
 async def control_motor():
     global vuelta
@@ -108,7 +114,7 @@ async def lectura_sensor():
             humidity_data.append(humidity)
             time_data.append(time.time())
             # Actualizar las gráficas
-            update_plot()
+            update_plots()
         await asyncio.sleep(1)
 
 async def main():
@@ -116,6 +122,21 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
+
+    root = tk.Tk()
+    root.title("Temperatura y Humedad")
+
+    # Crear una figura para la temperatura
+    temperature_fig = Figure(figsize=(5, 3), dpi=100)
+    temperature_canvas = FigureCanvasTkAgg(temperature_fig, master=root)
+    temperature_canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    
+    # Crear una figura para la humedad
+    humidity_fig = Figure(figsize=(5, 3), dpi=100)
+    humidity_canvas = FigureCanvasTkAgg(humidity_fig, master=root)
+    humidity_canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
     plt.ion()  # Habilita el modo interactivo de matplotlib
-    plt.figure(figsize=(8, 6))  # Tamaño de la figura (ancho, alto)
+
     loop.run_until_complete(main())
+    root.mainloop()
