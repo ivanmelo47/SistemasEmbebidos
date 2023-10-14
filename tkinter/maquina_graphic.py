@@ -48,7 +48,7 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Función para actualizar la gráfica
+# Función para actualizar la gráfica con etiquetas numéricas
 def update_plot():
     plt.clf()
     plt.plot(time_data, temperature_data, label='Temperatura (°C)')
@@ -56,6 +56,13 @@ def update_plot():
     plt.xlabel('Tiempo (segundos)')
     plt.ylabel('Valor')
     plt.legend()
+    
+    # Agregar etiquetas numéricas
+    if temperature_data:
+        plt.text(time_data[-1], temperature_data[-1], f'{temperature_data[-1]:.2f}°C', ha='right', va='bottom')
+    if humidity_data:
+        plt.text(time_data[-1], humidity_data[-1], f'{humidity_data[-1]:.2f}%', ha='right', va='top')
+
     plt.pause(1)
 
 async def control_motor():
