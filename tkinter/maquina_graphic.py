@@ -51,11 +51,10 @@ GPIO.setup(IN4, GPIO.OUT)
 adquirir_datos = False
 
 # Funcion para controlar el motor
-async def control_motor():
+def control_motor():
     global vuelta
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
-        
         if humidity is not None and temperature is not None:
             if vuelta and temperature >= 26:
                 for _ in range(pasos_por_vuelta):
@@ -85,7 +84,7 @@ def obtener_datos_sensor():
     return humidity, temperature
 
 # Función para actualizar los gráficos
-async def actualizar_grafico(i):
+def actualizar_grafico(i):
     global adquirir_datos
     if adquirir_datos:
         humidity, temperature = obtener_datos_sensor()
@@ -107,10 +106,9 @@ async def actualizar_grafico(i):
             ax_hum.autoscale_view()
 
 # Función para iniciar la adquisición de datos
-async def iniciar_adquisicion():
+def iniciar_adquisicion():
     global adquirir_datos
     adquirir_datos = True
-    await asyncio.gather(control_motor())
 
 # Función para detener la adquisición de datos
 def detener_adquisicion():
