@@ -41,7 +41,7 @@ sequence_ccw = list(reversed(sequence_cw))
 pasos_por_vuelta = 510  # Esto es para el motor 28BYJ-48
 
 # Define la velocidad (ajusta este valor para cambiar la velocidad)
-velocidad_ms = 1  # Tiempo de espera en milisegundos entre pasos (mayor valor = menor velocidad)
+velocidad_ms = 0.001  # Tiempo de espera en milisegundos entre pasos (mayor valor = menor velocidad)
 
 # Verifica si ya se dio la vuelta del actuador
 vuelta = True

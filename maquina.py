@@ -30,7 +30,7 @@ sequence_cw = [
 sequence_ccw = list(reversed(sequence_cw))
 
 pasos_por_vuelta = 510
-velocidad_ms = 1
+velocidad_ms = 0.001
 vuelta = True
 
 GPIO.setwarnings(False)
