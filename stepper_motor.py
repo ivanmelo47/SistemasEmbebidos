@@ -2,10 +2,10 @@ import RPi.GPIO as GPIO
 import time
 
 # Define los pines GPIO que están conectados a IN1, IN2, IN3, IN4
-IN1 = 2
-IN2 = 3
-IN3 = 4
-IN4 = 17
+IN1 = 17
+IN2 = 27
+IN3 = 22
+IN4 = 10
 
 # Configura los pines GPIO como salida
 GPIO.setmode(GPIO.BCM)
