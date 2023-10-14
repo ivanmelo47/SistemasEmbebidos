@@ -6,16 +6,16 @@ import time
 GPIO.setmode(GPIO.BCM)
 
 # Configura el pin GPIO al que está conectado el sensor DHT11
-pin_dht = 26
+pin_dht = 4
 
 # Configura el pin GPIO que controla el transistor
-pin_base = 16
+pin_base = 19
 
-# Define los pines del controlador ULN2003A
-IN1 = 2
-IN2 = 3
-IN3 = 4
-IN4 = 5
+# Define los pines GPIO que están conectados a IN1, IN2, IN3, IN4
+IN1 = 17
+IN2 = 27
+IN3 = 22
+IN4 = 10
 
 # Configura los pines del motor
 motor_pins = [IN1, IN2, IN3, IN4]
