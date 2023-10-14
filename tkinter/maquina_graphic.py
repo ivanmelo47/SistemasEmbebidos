@@ -3,6 +3,7 @@ import Adafruit_DHT
 import time
 import threading
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -48,15 +49,21 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
+# Función para inicializar la gráfica
+def init_plot():
+    plt.figure()
+    plt.xlabel('Tiempo (segundos)')
+    plt.ylabel('Valor')
+    plt.legend()
+
 # Función para actualizar la gráfica
-def update_plot():
+def update_plot(i):
     plt.clf()
     plt.plot(time_data, temperature_data, label='Temperatura (°C)')
     plt.plot(time_data, humidity_data, label='Humedad (%)')
     plt.xlabel('Tiempo (segundos)')
     plt.ylabel('Valor')
     plt.legend()
-    plt.pause(1)
 
 def control_motor_thread():
     global vuelta
@@ -95,11 +102,11 @@ def lectura_sensor_thread():
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             time_data.append(time.time())
-            # Actualizar la gráfica
-            update_plot()
-        time.sleep(1)
 
 def main():
+    # Iniciar la gráfica en el hilo principal
+    init_plot()
+    
     # Crear hilos para el control del motor y la lectura del sensor
     motor_thread = threading.Thread(target=control_motor_thread)
     sensor_thread = threading.Thread(target=lectura_sensor_thread)
@@ -108,11 +115,10 @@ def main():
     motor_thread.start()
     sensor_thread.start()
     
-    # Esperar a que ambos hilos terminen (esto no terminará nunca ya que son bucles infinitos)
-    motor_thread.join()
-    sensor_thread.join()
+    # Configurar la animación para actualizar la gráfica
+    ani = FuncAnimation(plt.gcf(), update_plot, interval=1000)
+    
+    plt.show()  # Mostrar la gráfica
 
 if __name__ == "__main__":
-    plt.ion()
-    plt.figure()
     main()
