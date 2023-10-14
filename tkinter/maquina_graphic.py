@@ -3,6 +3,7 @@ import Adafruit_DHT
 import time
 import asyncio
 import matplotlib.pyplot as plt
+from tkinter import *
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -48,6 +49,9 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
+# Variable para controlar el estado del sistema
+sistema_en_ejecucion = False
+
 # Función para actualizar la gráfica con etiquetas numéricas
 def update_plot():
     plt.clf()
@@ -55,7 +59,6 @@ def update_plot():
     plt.plot(time_data, humidity_data, label='Humedad (%)')
     plt.xlabel('Tiempo (segundos)')
     plt.ylabel('Valor')
-    plt.legend()
     
     # Agregar etiquetas numéricas
     if temperature_data:
@@ -63,6 +66,7 @@ def update_plot():
     if humidity_data:
         plt.text(time_data[-1], humidity_data[-1], f'{humidity_data[-1]:.2f}%', ha='right', va='top')
 
+    plt.legend()
     plt.pause(1)
 
 async def control_motor():
@@ -106,11 +110,42 @@ async def lectura_sensor():
             update_plot()
         await asyncio.sleep(1)
 
-async def main():
-    await asyncio.gather(control_motor(), lectura_sensor())
+# Función para iniciar/reanudar el sistema
+def iniciar_sistema():
+    global sistema_en_ejecucion
+    if not sistema_en_ejecucion:
+        sistema_en_ejecucion = True
+        loop.create_task(main())  # Iniciar el sistema en segundo plano
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    plt.ion()  # Habilita el modo interactivo de matplotlib
-    plt.figure()
-    loop.run_until_complete(main())
+# Función para detener el sistema
+def detener_sistema():
+    global sistema_en_ejecucion
+    sistema_en_ejecucion = False
+
+# Función para cerrar la aplicación
+def cerrar_aplicacion():
+    detener_sistema()
+    root.quit()
+
+# Crear una ventana de tkinter
+root = Tk()
+root.title("Control del Sistema")
+
+# Botones en la parte superior
+frame_top = Frame(root)
+frame_top.pack(side=TOP)
+
+boton_iniciar = Button(frame_top, text="Iniciar/Reanudar Sistema", command=iniciar_sistema)
+boton_detener = Button(frame_top, text="Detener Sistema", command=detener_sistema)
+boton_cerrar = Button(frame_top, text="Cerrar Aplicación", command=cerrar_aplicacion)
+
+boton_iniciar.pack(side=LEFT)
+boton_detener.pack(side=LEFT)
+boton_cerrar.pack(side=LEFT)
+
+# Gráfica
+plt.ion()  # Habilita el modo interactivo de matplotlib
+plt.figure()
+
+# Loop principal de la aplicación
+root.mainloop()
