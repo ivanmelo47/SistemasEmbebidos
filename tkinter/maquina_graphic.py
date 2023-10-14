@@ -52,31 +52,32 @@ adquirir_datos = False
 
 # Funcion para controlar el motor
 def control_motor():
-    global vuelta
-    while True:
-        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
-        if humidity is not None and temperature is not None:
-            if vuelta and temperature >= 26:
-                for _ in range(pasos_por_vuelta):
-                    for step in sequence_cw:
-                        GPIO.output(IN1, step[0])
-                        GPIO.output(IN2, step[1])
-                        GPIO.output(IN3, step[2])
-                        GPIO.output(IN4, step[3])
-                        time.sleep(velocidad_ms)
-                GPIO.output(pin_base, GPIO.HIGH)
-                vuelta = False
-            elif not vuelta and temperature < 26:
-                for _ in range(pasos_por_vuelta):
-                    for step in sequence_ccw:
-                        GPIO.output(IN1, step[0])
-                        GPIO.output(IN2, step[1])
-                        GPIO.output(IN3, step[2])
-                        GPIO.output(IN4, step[3])
-                        time.sleep(velocidad_ms)
-                GPIO.output(pin_base, GPIO.LOW)
-                vuelta = True
-        time.sleep(1)
+    if adquirir_datos:
+        global vuelta
+        while True:
+            humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+            if humidity is not None and temperature is not None:
+                if vuelta and temperature >= 26:
+                    for _ in range(pasos_por_vuelta):
+                        for step in sequence_cw:
+                            GPIO.output(IN1, step[0])
+                            GPIO.output(IN2, step[1])
+                            GPIO.output(IN3, step[2])
+                            GPIO.output(IN4, step[3])
+                            time.sleep(velocidad_ms)
+                    GPIO.output(pin_base, GPIO.HIGH)
+                    vuelta = False
+                elif not vuelta and temperature < 26:
+                    for _ in range(pasos_por_vuelta):
+                        for step in sequence_ccw:
+                            GPIO.output(IN1, step[0])
+                            GPIO.output(IN2, step[1])
+                            GPIO.output(IN3, step[2])
+                            GPIO.output(IN4, step[3])
+                            time.sleep(velocidad_ms)
+                    GPIO.output(pin_base, GPIO.LOW)
+                    vuelta = True
+            time.sleep(1)
 
 # Función para obtener los datos del sensor
 def obtener_datos_sensor():
@@ -109,6 +110,7 @@ def actualizar_grafico(i):
 def iniciar_adquisicion():
     global adquirir_datos
     adquirir_datos = True
+    control_motor()
 
 # Función para detener la adquisición de datos
 def detener_adquisicion():
