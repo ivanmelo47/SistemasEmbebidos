@@ -63,17 +63,17 @@ async def control_motor():
                             time.sleep(velocidad_ms)
                     GPIO.output(pin_base, GPIO.HIGH)
                     vuelta = False
-            else:
-                if not vuelta:
-                    for _ in range(pasos_por_vuelta):
-                        for step in sequence_ccw:
-                            GPIO.output(IN1, step[0])
-                            GPIO.output(IN2, step[1])
-                            GPIO.output(IN3, step[2])
-                            GPIO.output(IN4, step[3])
-                            time.sleep(velocidad_ms)
-                    GPIO.output(pin_base, GPIO.LOW)
-                    vuelta = True
+                else:
+                    if not vuelta:
+                        for _ in range(pasos_por_vuelta):
+                            for step in sequence_ccw:
+                                GPIO.output(IN1, step[0])
+                                GPIO.output(IN2, step[1])
+                                GPIO.output(IN3, step[2])
+                                GPIO.output(IN4, step[3])
+                                time.sleep(velocidad_ms)
+                        GPIO.output(pin_base, GPIO.LOW)
+                        vuelta = True
         await asyncio.sleep(1)
 
 # Código para crear la ventana de tkinter y los gráficos
@@ -116,56 +116,45 @@ def detener_graficos():
     ani.event_source.stop()  # Detiene la animación de los gráficos
     loop.stop()  # Detiene el bucle de eventos de asyncio
 
-
 root = tk.Tk()
 root.title("Sensor DHT11 - Gráficos de Temperatura y Humedad")
 
 frame_temp = ttk.Frame(root)
-frame_temp.pack(side=tk.LEFT, padx=10, pady=10)
-frame_temp.grid(column=0, row=0)
+frame_temp.grid(column=0, row=0, padx=10, pady=10)
 frame_temp.grid_propagate(0)
 
 frame_hum = ttk.Frame(root)
-frame_hum.pack(side=tk.LEFT, padx=10, pady=10)
-frame_hum.grid(column=1, row=0)
+frame_hum.grid(column=1, row=0, padx=10, pady=10)
 frame_hum.grid_propagate(0)
 
 iniciar_button = ttk.Button(root, text="Iniciar Gráficos", command=iniciar_graficos)
-iniciar_button.pack()
+iniciar_button.grid(row=1, column=0, columnspan=2)
+
 detener_button = ttk.Button(root, text="Detener Gráficos", command=detener_graficos)
-detener_button.pack()
+detener_button.grid(row=2, column=0, columnspan=2)
 
-fig_temp = Figure(figsize=(6, 4), dpi=100)
+fig_temp = Figure(figsize=(5, 4), dpi=100)
 ax_temp = fig_temp.add_subplot(111)
+ax_temp.set_xlabel('Tiempo (s)')
+ax_temp.set_ylabel('Temperatura (°C)')
 xdata_temp, ydata_temp = [], []
-line_temp, = ax_temp.plot(xdata_temp, ydata_temp, 'r', label="Temperatura (°C)")
-ax_temp.set_xlabel("Tiempo (s)")
-ax_temp.set_ylabel("Temperatura (°C)")
-ax_temp.set_title("Gráfico de Temperatura")
-ax_temp.legend()
-canvas_temp = FigureCanvasTkAgg(fig_temp, master=frame_temp)
-canvas_temp.get_tk_widget().pack()
+line_temp, = ax_temp.plot(xdata_temp, ydata_temp, 'r-')
 
-fig_hum = Figure(figsize=(6, 4), dpi=100)
+canvas_temp = FigureCanvasTkAgg(fig_temp, master=frame_temp)
+canvas_temp.get_tk_widget().grid(row=0, column=0)
+ani_temp = animation.FuncAnimation(fig_temp, crear_actualizar_grafico_temp, blit=False, interval=1000)
+
+fig_hum = Figure(figsize=(5, 4), dpi=100)
 ax_hum = fig_hum.add_subplot(111)
+ax_hum.set_xlabel('Tiempo (s)')
+ax_hum.set_ylabel('Humedad (%)')
 xdata_hum, ydata_hum = [], []
-line_hum, = ax_hum.plot(xdata_hum, ydata_hum, 'g', label="Humedad (%)")
-ax_hum.set_xlabel("Tiempo (s)")
-ax_hum.set_ylabel("Humedad (%)")
-ax_hum.set_title("Gráfico de Humedad")
-ax_hum.legend()
+line_hum, = ax_hum.plot(xdata_hum, ydata_hum, 'b-')
+
 canvas_hum = FigureCanvasTkAgg(fig_hum, master=frame_hum)
-canvas_hum.get_tk_widget().pack()
+canvas_hum.get_tk_widget().grid(row=0, column=0)
+ani_hum = animation.FuncAnimation(fig_hum, crear_actualizar_grafico_hum, blit=False, interval=1000)
 
 adquirir_datos = False
 
-def actualizar_graficos(i):
-    if adquirir_datos:
-        crear_actualizar_grafico_temp()
-        crear_actualizar_grafico_hum()
-
-ani = animation.FuncAnimation(fig_temp, actualizar_graficos, interval=100)
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    root.mainloop()
+root.mainloop()
