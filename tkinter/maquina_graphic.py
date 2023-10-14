@@ -48,15 +48,19 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Función para actualizar la gráfica
-def update_plot():
-    plt.clf()
+# Funciones para actualizar las gráficas de temperatura y humedad
+def update_temperature_plot():
+    plt.subplot(211)  # Gráfico superior
     plt.plot(time_data, temperature_data, label='Temperatura (°C)')
+    plt.ylabel('Temperatura (°C)')
+    plt.legend()
+
+def update_humidity_plot():
+    plt.subplot(212)  # Gráfico inferior
     plt.plot(time_data, humidity_data, label='Humedad (%)')
     plt.xlabel('Tiempo (segundos)')
-    plt.ylabel('Valor')
+    plt.ylabel('Humedad (%)')
     plt.legend()
-    plt.pause(1)
 
 async def control_motor():
     global vuelta
@@ -71,7 +75,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.HIGH)
                 vuelta = False
             elif not vuelta and temperature < 26:
@@ -81,7 +85,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
         await asyncio.sleep(1)
@@ -95,8 +99,11 @@ async def lectura_sensor():
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             time_data.append(time.time())
-            # Actualizar la gráfica
-            update_plot()
+            # Actualizar las gráficas
+            update_temperature_plot()
+            update_humidity_plot()
+            plt.tight_layout()
+            plt.pause(1)
         await asyncio.sleep(1)
 
 async def main():
@@ -104,6 +111,8 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    plt.ion()  # Habilita el modo interactivo de matplotlib
     plt.figure()
+    plt.ion()  # Habilita el modo interactivo de matplotlib
+    plt.subplot(211)  # Gráfico superior para temperatura
+    plt.title('Temperatura y Humedad')
     loop.run_until_complete(main())
