@@ -110,7 +110,7 @@ def actualizar_grafico(i):
 async def iniciar_adquisicion():
     global adquirir_datos
     adquirir_datos = True
-    await asyncio.gather(control_motor())
+    asyncio.gather(control_motor())
 
 # Función para detener la adquisición de datos
 def detener_adquisicion():
