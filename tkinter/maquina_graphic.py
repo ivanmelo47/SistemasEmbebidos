@@ -51,7 +51,7 @@ GPIO.setup(IN4, GPIO.OUT)
 adquirir_datos = False
 
 # Funcion para controlar el motor
-def control_motor():
+async def control_motor():
     global vuelta
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
@@ -77,7 +77,7 @@ def control_motor():
                         time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
-        time.sleep(1)
+        await asyncio.sleep(1)
 
 # Función para obtener los datos del sensor
 def obtener_datos_sensor():
