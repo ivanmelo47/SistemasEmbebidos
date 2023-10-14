@@ -104,14 +104,14 @@ def crear_actualizar_grafico_hum():
     ax_hum.autoscale_view()
 
 def iniciar_graficos():
-    global adquirir_datos
+    global adquirir_datos, ani, loop
     adquirir_datos = True
     loop = asyncio.get_event_loop()
     loop.create_task(control_motor())  # Llama a control_motor para mover el motor
     ani.event_source.start()  # Inicia la animación de los gráficos
 
 def detener_graficos():
-    global adquirir_datos
+    global adquirir_datos, ani, loop
     adquirir_datos = False
     ani.event_source.stop()  # Detiene la animación de los gráficos
     loop.stop()  # Detiene el bucle de eventos de asyncio
