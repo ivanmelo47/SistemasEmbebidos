@@ -1,9 +1,8 @@
 import RPi.GPIO as GPIO
 import Adafruit_DHT
 import time
-import threading
+import asyncio
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -49,23 +48,17 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Función para inicializar la gráfica
-def init_plot():
-    plt.figure()
-    plt.xlabel('Tiempo (segundos)')
-    plt.ylabel('Valor')
-    plt.legend()
-
 # Función para actualizar la gráfica
-def update_plot(i):
+def update_plot():
     plt.clf()
     plt.plot(time_data, temperature_data, label='Temperatura (°C)')
     plt.plot(time_data, humidity_data, label='Humedad (%)')
     plt.xlabel('Tiempo (segundos)')
     plt.ylabel('Valor')
     plt.legend()
+    plt.pause(1)
 
-def control_motor_thread():
+async def control_motor():
     global vuelta
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
@@ -91,9 +84,9 @@ def control_motor_thread():
                         time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
-        time.sleep(1)
+        await asyncio.sleep(1)
 
-def lectura_sensor_thread():
+async def lectura_sensor():
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         if humidity is not None and temperature is not None:
@@ -102,23 +95,15 @@ def lectura_sensor_thread():
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             time_data.append(time.time())
+            # Actualizar la gráfica
+            update_plot()
+        await asyncio.sleep(1)
 
-def main():
-    # Iniciar la gráfica en el hilo principal
-    init_plot()
-    
-    # Crear hilos para el control del motor y la lectura del sensor
-    motor_thread = threading.Thread(target=control_motor_thread)
-    sensor_thread = threading.Thread(target=lectura_sensor_thread)
-    
-    # Iniciar los hilos
-    motor_thread.start()
-    sensor_thread.start()
-    
-    # Configurar la animación para actualizar la gráfica
-    ani = FuncAnimation(plt.gcf(), update_plot, interval=1000)
-    
-    plt.show()  # Mostrar la gráfica
+async def main():
+    await asyncio.gather(control_motor(), lectura_sensor())
 
 if __name__ == "__main__":
-    main()
+    loop = asyncio.get_event_loop()
+    plt.ion()  # Habilita el modo interactivo de matplotlib
+    plt.figure()
+    loop.run_until_complete(main())
