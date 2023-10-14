@@ -5,7 +5,9 @@ import asyncio
 import matplotlib.pyplot as plt
 
 # Configura los pines GPIO y otros valores
-pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
+pin_base = 26  # Debes asignar el pin GPIO correcto de la Raspberry Pi
+
+#GPIO.output(pin_base, GPIO.LOW)
 
 # Define el modelo del sensor y el número de pin GPIO
 sensor = Adafruit_DHT.DHT11
@@ -48,6 +50,8 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
+GPIO.output(pin_base, GPIO.LOW)
+
 # Función para actualizar la gráfica con etiquetas numéricas
 def update_plot():
     plt.clf()
@@ -71,7 +75,7 @@ async def control_motor():
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         
         if humidity is not None and temperature is not None:
-            if vuelta and temperature >= 26:
+            if vuelta and temperature >= 32:
                 for _ in range(pasos_por_vuelta):
                     for step in sequence_cw:
                         GPIO.output(IN1, step[0])
@@ -81,7 +85,7 @@ async def control_motor():
                         await asyncio.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.HIGH)
                 vuelta = False
-            elif not vuelta and temperature < 26:
+            elif not vuelta and temperature < 31:
                 for _ in range(pasos_por_vuelta):
                     for step in sequence_ccw:
                         GPIO.output(IN1, step[0])
