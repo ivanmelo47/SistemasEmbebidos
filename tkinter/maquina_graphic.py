@@ -88,6 +88,28 @@ def cambiar_estado_motor():
     global motor_encendido
     motor_encendido = not motor_encendido
 
+# Función para actualizar los gráficos
+def actualizar_grafico(i):
+    global motor_encendido, xdata, ydata_temp, ydata_hum
+    if motor_encendido:
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+        if humidity is not None and temperature is not None:
+            temperatura_label.config(text=f"Temperatura: {temperature:.2f}°C")
+            humedad_label.config(text=f"Humedad: {humidity:.2f}%")
+            xdata.append(time.time())
+            ydata_temp.append(temperature)
+            ydata_hum.append(humidity)
+            if len(xdata) > 20:
+                xdata.pop(0)
+                ydata_temp.pop(0)
+                ydata_hum.pop(0)
+            line_temp.set_data(xdata, ydata_temp)
+            line_hum.set_data(xdata, ydata_hum)
+            ax_temp.relim()
+            ax_temp.autoscale_view()
+            ax_hum.relim()
+            ax_hum.autoscale_view()
+
 xdata, ydata_temp, ydata_hum = []
 
 # Crear la ventana principal de Tkinter
@@ -128,11 +150,3 @@ ani_hum = animation.FuncAnimation(fig_hum, actualizar_grafico, interval=1000)
 
 # Iniciar la aplicación de Tkinter
 root.mainloop()
-
-# Ejecutar la lectura del sensor en paralelo
-async def main():
-    await asyncio.gather(control_motor(), lectura_sensor())
-
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
