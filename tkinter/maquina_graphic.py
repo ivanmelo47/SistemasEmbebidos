@@ -49,8 +49,22 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Variable para controlar el estado del sistema
-sistema_en_ejecucion = False
+# Variable global para controlar el estado del sistema
+sistema_activado = False
+
+# Función para activar el sistema
+def iniciar_sistema():
+    global sistema_activado
+    sistema_activado = True
+    btn_iniciar.config(state=DISABLED)
+    btn_detener.config(state=NORMAL)
+
+# Función para desactivar el sistema
+def detener_sistema():
+    global sistema_activado
+    sistema_activado = False
+    btn_iniciar.config(state=NORMAL)
+    btn_detener.config(state=DISABLED)
 
 # Función para actualizar la gráfica con etiquetas numéricas
 def update_plot():
@@ -59,6 +73,7 @@ def update_plot():
     plt.plot(time_data, humidity_data, label='Humedad (%)')
     plt.xlabel('Tiempo (segundos)')
     plt.ylabel('Valor')
+    plt.legend()
     
     # Agregar etiquetas numéricas
     if temperature_data:
@@ -66,35 +81,35 @@ def update_plot():
     if humidity_data:
         plt.text(time_data[-1], humidity_data[-1], f'{humidity_data[-1]:.2f}%', ha='right', va='top')
 
-    plt.legend()
     plt.pause(1)
 
 async def control_motor():
     global vuelta
     while True:
-        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+        if sistema_activado:  # Solo si el sistema está activado
+            humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         
-        if humidity is not None and temperature is not None:
-            if vuelta and temperature >= 26:
-                for _ in range(pasos_por_vuelta):
-                    for step in sequence_cw:
-                        GPIO.output(IN1, step[0])
-                        GPIO.output(IN2, step[1])
-                        GPIO.output(IN3, step[2])
-                        GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
-                GPIO.output(pin_base, GPIO.HIGH)
-                vuelta = False
-            elif not vuelta and temperature < 26:
-                for _ in range(pasos_por_vuelta):
-                    for step in sequence_ccw:
-                        GPIO.output(IN1, step[0])
-                        GPIO.output(IN2, step[1])
-                        GPIO.output(IN3, step[2])
-                        GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
-                GPIO.output(pin_base, GPIO.LOW)
-                vuelta = True
+            if humidity is not None and temperature is not None:
+                if vuelta and temperature >= 26:
+                    for _ in range(pasos_por_vuelta):
+                        for step in sequence_cw:
+                            GPIO.output(IN1, step[0])
+                            GPIO.output(IN2, step[1])
+                            GPIO.output(IN3, step[2])
+                            GPIO.output(IN4, step[3])
+                            await asyncio.sleep(velocidad_ms)
+                    GPIO.output(pin_base, GPIO.HIGH)
+                    vuelta = False
+                elif not vuelta and temperature < 26:
+                    for _ in range(pasos_por_vuelta):
+                        for step in sequence_ccw:
+                            GPIO.output(IN1, step[0])
+                            GPIO.output(IN2, step[1])
+                            GPIO.output(IN3, step[2])
+                            GPIO.output(IN4, step[3])
+                            await asyncio.sleep(velocidad_ms)
+                    GPIO.output(pin_base, GPIO.LOW)
+                    vuelta = True
         await asyncio.sleep(1)
 
 async def lectura_sensor():
@@ -110,42 +125,24 @@ async def lectura_sensor():
             update_plot()
         await asyncio.sleep(1)
 
-# Función para iniciar/reanudar el sistema
-def iniciar_sistema():
-    global sistema_en_ejecucion
-    if not sistema_en_ejecucion:
-        sistema_en_ejecucion = True
-        loop.create_task(main())  # Iniciar el sistema en segundo plano
+async def main():
+    await asyncio.gather(control_motor(), lectura_sensor())
 
-# Función para detener el sistema
-def detener_sistema():
-    global sistema_en_ejecucion
-    sistema_en_ejecucion = False
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
 
-# Función para cerrar la aplicación
-def cerrar_aplicacion():
-    detener_sistema()
-    root.quit()
+    # Configuración de la interfaz gráfica
+    root = Tk()
+    root.title("Control del Sistema")
+    
+    btn_iniciar = Button(root, text="Iniciar Sistema", command=iniciar_sistema)
+    btn_detener = Button(root, text="Detener Sistema", command=detener_sistema, state=DISABLED)
+    
+    btn_iniciar.pack()
+    btn_detener.pack()
 
-# Crear una ventana de tkinter
-root = Tk()
-root.title("Control del Sistema")
-
-# Botones en la parte superior
-frame_top = Frame(root)
-frame_top.pack(side=TOP)
-
-boton_iniciar = Button(frame_top, text="Iniciar/Reanudar Sistema", command=iniciar_sistema)
-boton_detener = Button(frame_top, text="Detener Sistema", command=detener_sistema)
-boton_cerrar = Button(frame_top, text="Cerrar Aplicación", command=cerrar_aplicacion)
-
-boton_iniciar.pack(side=LEFT)
-boton_detener.pack(side=LEFT)
-boton_cerrar.pack(side=LEFT)
-
-# Gráfica
-plt.ion()  # Habilita el modo interactivo de matplotlib
-plt.figure()
-
-# Loop principal de la aplicación
-root.mainloop()
+    plt.ion()  # Habilita el modo interactivo de matplotlib
+    plt.figure()
+    
+    loop.run_until_complete(main())
+    root.mainloop()
