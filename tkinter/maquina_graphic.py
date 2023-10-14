@@ -48,19 +48,31 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
+# Crear las gráficas y las leyendas
+plt.figure()
+plt.ion()
+plt.subplot(211)  # Gráfico superior para temperatura
+plt.title('Temperatura y Humedad')
+plt.ylabel('Temperatura (°C)')
+temp_line, = plt.plot(time_data, temperature_data, label='Temperatura (°C)')
+plt.legend(handles=[temp_line], loc='upper right')
+
+plt.subplot(212)  # Gráfico inferior para humedad
+plt.xlabel('Tiempo (segundos)')
+plt.ylabel('Humedad (%)')
+humidity_line, = plt.plot(time_data, humidity_data, label='Humedad (%)')
+plt.legend(handles=[humidity_line], loc='upper right')
+
 # Funciones para actualizar las gráficas de temperatura y humedad
 def update_temperature_plot():
-    plt.subplot(211)  # Gráfico superior
-    plt.plot(time_data, temperature_data, label='Temperatura (°C)')
-    plt.ylabel('Temperatura (°C)')
-    plt.legend()
+    temp_line.set_data(time_data, temperature_data)
+    plt.xlim(min(time_data), max(time_data))
+    plt.ylim(min(temperature_data) - 2, max(temperature_data) + 2)
 
 def update_humidity_plot():
-    plt.subplot(212)  # Gráfico inferior
-    plt.plot(time_data, humidity_data, label='Humedad (%)')
-    plt.xlabel('Tiempo (segundos)')
-    plt.ylabel('Humedad (%)')
-    plt.legend()
+    humidity_line.set_data(time_data, humidity_data)
+    plt.xlim(min(time_data), max(time_data))
+    plt.ylim(min(humidity_data) - 5, max(humidity_data) + 5)
 
 async def control_motor():
     global vuelta
@@ -88,6 +100,9 @@ async def control_motor():
                         time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
+        update_temperature_plot()
+        update_humidity_plot()
+        plt.pause(1)
         await asyncio.sleep(1)
 
 async def lectura_sensor():
@@ -99,11 +114,6 @@ async def lectura_sensor():
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             time_data.append(time.time())
-            # Actualizar las gráficas
-            update_temperature_plot()
-            update_humidity_plot()
-            plt.tight_layout()
-            plt.pause(1)
         await asyncio.sleep(1)
 
 async def main():
@@ -111,8 +121,4 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    plt.figure()
-    plt.ion()  # Habilita el modo interactivo de matplotlib
-    plt.subplot(211)  # Gráfico superior para temperatura
-    plt.title('Temperatura y Humedad')
     loop.run_until_complete(main())
