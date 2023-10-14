@@ -4,17 +4,17 @@ import time
 import asyncio
 
 # Configura los pines GPIO y otros valores
-pin_base = 23  # Debes asignar el pin GPIO correcto de la Raspberry Pi
+pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
 
 # Define el modelo del sensor y el número de pin GPIO
 sensor = Adafruit_DHT.DHT11
 pin_dht = 4  # Debes asignar el pin GPIO correcto de la Raspberry Pi
 
-# Define los pines del controlador ULN2003A
-IN1 = 17  # Debes asignar el pin GPIO correcto de la Raspberry Pi
-IN2 = 18  # Debes asignar el pin GPIO correcto de la Raspberry Pi
-IN3 = 27  # Debes asignar el pin GPIO correcto de la Raspberry Pi
-IN4 = 22  # Debes asignar el pin GPIO correcto de la Raspberry Pi
+# Define los pines GPIO que están conectados a IN1, IN2, IN3, IN4
+IN1 = 17
+IN2 = 27
+IN3 = 22
+IN4 = 10
 
 sequence_cw = [
     (1, 0, 0, 0),
