@@ -3,7 +3,6 @@ import Adafruit_DHT
 import time
 import asyncio
 import matplotlib.pyplot as plt
-from tkinter import *
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -49,23 +48,6 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Variable global para controlar el estado del sistema
-sistema_activado = False
-
-# Función para activar el sistema
-def iniciar_sistema():
-    global sistema_activado
-    sistema_activado = True
-    btn_iniciar.config(state=DISABLED)
-    btn_detener.config(state=NORMAL)
-
-# Función para desactivar el sistema
-def detener_sistema():
-    global sistema_activado
-    sistema_activado = False
-    btn_iniciar.config(state=NORMAL)
-    btn_detener.config(state=DISABLED)
-
 # Función para actualizar la gráfica con etiquetas numéricas
 def update_plot():
     plt.clf()
@@ -86,30 +68,29 @@ def update_plot():
 async def control_motor():
     global vuelta
     while True:
-        if sistema_activado:  # Solo si el sistema está activado
-            humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         
-            if humidity is not None and temperature is not None:
-                if vuelta and temperature >= 26:
-                    for _ in range(pasos_por_vuelta):
-                        for step in sequence_cw:
-                            GPIO.output(IN1, step[0])
-                            GPIO.output(IN2, step[1])
-                            GPIO.output(IN3, step[2])
-                            GPIO.output(IN4, step[3])
-                            await asyncio.sleep(velocidad_ms)
-                    GPIO.output(pin_base, GPIO.HIGH)
-                    vuelta = False
-                elif not vuelta and temperature < 26:
-                    for _ in range(pasos_por_vuelta):
-                        for step in sequence_ccw:
-                            GPIO.output(IN1, step[0])
-                            GPIO.output(IN2, step[1])
-                            GPIO.output(IN3, step[2])
-                            GPIO.output(IN4, step[3])
-                            await asyncio.sleep(velocidad_ms)
-                    GPIO.output(pin_base, GPIO.LOW)
-                    vuelta = True
+        if humidity is not None and temperature is not None:
+            if vuelta and temperature >= 26:
+                for _ in range(pasos_por_vuelta):
+                    for step in sequence_cw:
+                        GPIO.output(IN1, step[0])
+                        GPIO.output(IN2, step[1])
+                        GPIO.output(IN3, step[2])
+                        GPIO.output(IN4, step[3])
+                        await asyncio.sleep(velocidad_ms)
+                GPIO.output(pin_base, GPIO.HIGH)
+                vuelta = False
+            elif not vuelta and temperature < 26:
+                for _ in range(pasos_por_vuelta):
+                    for step in sequence_ccw:
+                        GPIO.output(IN1, step[0])
+                        GPIO.output(IN2, step[1])
+                        GPIO.output(IN3, step[2])
+                        GPIO.output(IN4, step[3])
+                        await asyncio.sleep(velocidad_ms)
+                GPIO.output(pin_base, GPIO.LOW)
+                vuelta = True
         await asyncio.sleep(1)
 
 async def lectura_sensor():
@@ -130,19 +111,6 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-
-    # Configuración de la interfaz gráfica
-    root = Tk()
-    root.title("Control del Sistema")
-    
-    btn_iniciar = Button(root, text="Iniciar Sistema", command=iniciar_sistema)
-    btn_detener = Button(root, text="Detener Sistema", command=detener_sistema, state=DISABLED)
-    
-    btn_iniciar.pack()
-    btn_detener.pack()
-
     plt.ion()  # Habilita el modo interactivo de matplotlib
     plt.figure()
-    
     loop.run_until_complete(main())
-    root.mainloop()
