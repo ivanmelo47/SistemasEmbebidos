@@ -64,7 +64,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        time.sleep(velocidad_ms)
+                        await asyncio.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.HIGH)
                 vuelta = False
             elif not vuelta and temperature < 26:
@@ -74,7 +74,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        time.sleep(velocidad_ms)
+                        await asyncio.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
         await asyncio.sleep(1)
@@ -85,7 +85,7 @@ def obtener_datos_sensor():
     return humidity, temperature
 
 # Función para actualizar los gráficos
-def actualizar_grafico(i):
+async def actualizar_grafico(i):
     global adquirir_datos
     if adquirir_datos:
         humidity, temperature = obtener_datos_sensor()
@@ -107,10 +107,10 @@ def actualizar_grafico(i):
             ax_hum.autoscale_view()
 
 # Función para iniciar la adquisición de datos
-def iniciar_adquisicion():
+async def iniciar_adquisicion():
     global adquirir_datos
     adquirir_datos = True
-    control_motor()
+    await asyncio.gather(control_motor())
 
 # Función para detener la adquisición de datos
 def detener_adquisicion():
