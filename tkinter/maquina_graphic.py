@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import Adafruit_DHT
 import time
-import asyncio
+import threading
 import matplotlib.pyplot as plt
 
 # Configura los pines GPIO y otros valores
@@ -58,7 +58,7 @@ def update_plot():
     plt.legend()
     plt.pause(1)
 
-async def control_motor():
+def control_motor_thread():
     global vuelta
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
@@ -71,7 +71,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.HIGH)
                 vuelta = False
             elif not vuelta and temperature < 26:
@@ -81,12 +81,12 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
-        await asyncio.sleep(1)
+        time.sleep(1)
 
-async def lectura_sensor():
+def lectura_sensor_thread():
     while True:
         humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         if humidity is not None and temperature is not None:
@@ -97,13 +97,22 @@ async def lectura_sensor():
             time_data.append(time.time())
             # Actualizar la gráfica
             update_plot()
-        await asyncio.sleep(1)
+        time.sleep(1)
 
-async def main():
-    await asyncio.gather(control_motor(), lectura_sensor())
+def main():
+    # Crear hilos para el control del motor y la lectura del sensor
+    motor_thread = threading.Thread(target=control_motor_thread)
+    sensor_thread = threading.Thread(target=lectura_sensor_thread)
+    
+    # Iniciar los hilos
+    motor_thread.start()
+    sensor_thread.start()
+    
+    # Esperar a que ambos hilos terminen (esto no terminará nunca ya que son bucles infinitos)
+    motor_thread.join()
+    sensor_thread.join()
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    plt.ion()  # Habilita el modo interactivo de matplotlib
+    plt.ion()
     plt.figure()
-    loop.run_until_complete(main())
+    main()
