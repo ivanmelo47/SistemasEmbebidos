@@ -54,7 +54,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.HIGH)
                 vuelta = False
             elif not vuelta and temperature < 26:
@@ -64,7 +64,7 @@ async def control_motor():
                         GPIO.output(IN2, step[1])
                         GPIO.output(IN3, step[2])
                         GPIO.output(IN4, step[3])
-                        await asyncio.sleep(velocidad_ms)
+                        time.sleep(velocidad_ms)
                 GPIO.output(pin_base, GPIO.LOW)
                 vuelta = True
         await asyncio.sleep(1)
