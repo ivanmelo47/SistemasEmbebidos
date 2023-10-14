@@ -46,14 +46,16 @@ GPIO.setup(IN2, GPIO.OUT)
 GPIO.setup(IN3, GPIO.OUT)
 GPIO.setup(IN4, GPIO.OUT)
 
+motor_encendido = False
+
 async def control_motor():
-    global vuelta
+    global vuelta, motor_encendido
     while True:
-        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+        if motor_encendido:
+            humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
         
-        if humidity is not None and temperature is not None:
-            if temperature >= 26:
-                if vuelta:
+            if humidity is not None and temperature is not None:
+                if vuelta and temperature >= 26:
                     for _ in range(pasos_por_vuelta):
                         for step in sequence_cw:
                             GPIO.output(IN1, step[0])
@@ -63,98 +65,74 @@ async def control_motor():
                             time.sleep(velocidad_ms)
                     GPIO.output(pin_base, GPIO.HIGH)
                     vuelta = False
-                else:
-                    if not vuelta:
-                        for _ in range(pasos_por_vuelta):
-                            for step in sequence_ccw:
-                                GPIO.output(IN1, step[0])
-                                GPIO.output(IN2, step[1])
-                                GPIO.output(IN3, step[2])
-                                GPIO.output(IN4, step[3])
-                                time.sleep(velocidad_ms)
-                        GPIO.output(pin_base, GPIO.LOW)
-                        vuelta = True
+                elif not vuelta and temperature < 26:
+                    for _ in range(pasos_por_vuelta):
+                        for step in sequence_ccw:
+                            GPIO.output(IN1, step[0])
+                            GPIO.output(IN2, step[1])
+                            GPIO.output(IN3, step[2])
+                            GPIO.output(IN4, step[3])
+                            time.sleep(velocidad_ms)
+                    GPIO.output(pin_base, GPIO.LOW)
+                    vuelta = True
         await asyncio.sleep(1)
 
-# Código para crear la ventana de tkinter y los gráficos
-def crear_actualizar_grafico_temp():
-    global xdata_temp, ydata_temp, line_temp
-    xdata_temp.append(time.time())
-    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
-    if humidity is not None and temperature is not None:
-        ydata_temp.append(temperature)
-    if len(xdata_temp) > 20:
-        xdata_temp.pop(0)
-        ydata_temp.pop(0)
-    line_temp.set_data(xdata_temp, ydata_temp)
-    ax_temp.relim()
-    ax_temp.autoscale_view()
+async def lectura_sensor():
+    while True:
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
+        if humidity is not None and temperature is not None:
+            print(f"\rTemperatura: {temperature:.2f}°C, Humedad: {humidity:.2f}%", end="")
+        await asyncio.sleep(1)
 
-def crear_actualizar_grafico_hum():
-    global xdata_hum, ydata_hum, line_hum
-    xdata_hum.append(time.time())
-    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin_dht)
-    if humidity is not None and temperature is not None:
-        ydata_hum.append(humidity)
-    if len(xdata_hum) > 20:
-        xdata_hum.pop(0)
-        ydata_hum.pop(0)
-    line_hum.set_data(xdata_hum, ydata_hum)
-    ax_hum.relim()
-    ax_hum.autoscale_view()
+def cambiar_estado_motor():
+    global motor_encendido
+    motor_encendido = not motor_encendido
 
-def iniciar_graficos():
-    global adquirir_datos, ani, loop
-    adquirir_datos = True
-    loop = asyncio.get_event_loop()
-    loop.create_task(control_motor())  # Llama a control_motor para mover el motor
-    ani.event_source.start()  # Inicia la animación de los gráficos
+xdata, ydata_temp, ydata_hum = []
 
-def detener_graficos():
-    global adquirir_datos, ani, loop
-    adquirir_datos = False
-    ani.event_source.stop()  # Detiene la animación de los gráficos
-    loop.stop()  # Detiene el bucle de eventos de asyncio
-
+# Crear la ventana principal de Tkinter
 root = tk.Tk()
 root.title("Sensor DHT11 - Gráficos de Temperatura y Humedad")
 
-frame_temp = ttk.Frame(root)
-frame_temp.grid(column=0, row=0, padx=10, pady=10)
-frame_temp.grid_propagate(0)
+# Crear etiquetas para mostrar los valores de temperatura y humedad
+temperatura_label = ttk.Label(root, text="", font=("Helvetica", 14))
+temperatura_label.pack()
+humedad_label = ttk.Label(root, text="", font=("Helvetica", 14))
+humedad_label.pack()
 
-frame_hum = ttk.Frame(root)
-frame_hum.grid(column=1, row=0, padx=10, pady=10)
-frame_hum.grid_propagate(0)
+# Crear botones para iniciar y detener el motor y la adquisición de datos
+motor_button = ttk.Button(root, text="Iniciar/Detener Motor", command=cambiar_estado_motor)
+motor_button.pack()
 
-iniciar_button = ttk.Button(root, text="Iniciar Gráficos", command=iniciar_graficos)
-iniciar_button.grid(row=1, column=0, columnspan=2)
+# Crear una figura de Matplotlib con dos subgráficos
+fig_temp = Figure(figsize=(8, 4), dpi=100)
+ax_temp = fig_temp.add_subplot(211)
+ax_temp.set_ylabel("Temperatura (°C)")
+ax_temp.set_title("Gráfico de Temperatura")
+line_temp, = ax_temp.plot(xdata, ydata_temp, 'r-')
 
-detener_button = ttk.Button(root, text="Detener Gráficos", command=detener_graficos)
-detener_button.grid(row=2, column=0, columnspan=2)
+fig_hum = Figure(figsize=(8, 4), dpi=100)
+ax_hum = fig_hum.add_subplot(212)
+ax_hum.set_xlabel("Tiempo (s)")
+ax_hum.set_ylabel("Humedad (%)")
+ax_hum.set_title("Gráfico de Humedad")
+line_hum, = ax_hum.plot(xdata, ydata_hum, 'g-')
 
-fig_temp = Figure(figsize=(5, 4), dpi=100)
-ax_temp = fig_temp.add_subplot(111)
-ax_temp.set_xlabel('Tiempo (s)')
-ax_temp.set_ylabel('Temperatura (°C)')
-xdata_temp, ydata_temp = [], []
-line_temp, = ax_temp.plot(xdata_temp, ydata_temp, 'r-')
+canvas_temp = FigureCanvasTkAgg(fig_temp, master=root)
+canvas_temp.get_tk_widget().pack()
+ani_temp = animation.FuncAnimation(fig_temp, actualizar_grafico, interval=1000)
 
-canvas_temp = FigureCanvasTkAgg(fig_temp, master=frame_temp)
-canvas_temp.get_tk_widget().grid(row=0, column=0)
-ani_temp = animation.FuncAnimation(fig_temp, crear_actualizar_grafico_temp, blit=False, interval=1000)
+canvas_hum = FigureCanvasTkAgg(fig_hum, master=root)
+canvas_hum.get_tk_widget().pack()
+ani_hum = animation.FuncAnimation(fig_hum, actualizar_grafico, interval=1000)
 
-fig_hum = Figure(figsize=(5, 4), dpi=100)
-ax_hum = fig_hum.add_subplot(111)
-ax_hum.set_xlabel('Tiempo (s)')
-ax_hum.set_ylabel('Humedad (%)')
-xdata_hum, ydata_hum = [], []
-line_hum, = ax_hum.plot(xdata_hum, ydata_hum, 'b-')
-
-canvas_hum = FigureCanvasTkAgg(fig_hum, master=frame_hum)
-canvas_hum.get_tk_widget().grid(row=0, column=0)
-ani_hum = animation.FuncAnimation(fig_hum, crear_actualizar_grafico_hum, blit=False, interval=1000)
-
-adquirir_datos = False
-
+# Iniciar la aplicación de Tkinter
 root.mainloop()
+
+# Ejecutar la lectura del sensor en paralelo
+async def main():
+    await asyncio.gather(control_motor(), lectura_sensor())
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
