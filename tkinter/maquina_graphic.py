@@ -3,10 +3,6 @@ import Adafruit_DHT
 import time
 import asyncio
 import matplotlib.pyplot as plt
-import tkinter as tk
-from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 
 # Configura los pines GPIO y otros valores
 pin_base = 19  # Debes asignar el pin GPIO correcto de la Raspberry Pi
@@ -52,17 +48,15 @@ temperature_data = []
 humidity_data = []
 time_data = []
 
-# Funciones para actualizar las gráficas de temperatura y humedad
-def update_temperature_plot():
-    temperature_canvas.draw()
-
-def update_humidity_plot():
-    humidity_canvas.draw()
-
-# Función para actualizar las gráficas
-def update_plots():
-    update_temperature_plot()
-    update_humidity_plot()
+# Función para actualizar la gráfica
+def update_plot():
+    plt.clf()
+    plt.plot(time_data, temperature_data, label='Temperatura (°C)')
+    plt.plot(time_data, humidity_data, label='Humedad (%)')
+    plt.xlabel('Tiempo (segundos)')
+    plt.ylabel('Valor')
+    plt.legend()
+    plt.pause(1)
 
 async def control_motor():
     global vuelta
@@ -101,8 +95,8 @@ async def lectura_sensor():
             temperature_data.append(temperature)
             humidity_data.append(humidity)
             time_data.append(time.time())
-            # Actualizar las gráficas
-            update_plots()
+            # Actualizar la gráfica
+            update_plot()
         await asyncio.sleep(1)
 
 async def main():
@@ -110,21 +104,6 @@ async def main():
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-
-    root = tk.Tk()
-    root.title("Temperatura y Humedad")
-
-    # Crear una figura para la temperatura
-    temperature_fig = Figure(figsize=(5, 3), dpi=100)
-    temperature_canvas = FigureCanvasTkAgg(temperature_fig, master=root)
-    temperature_canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    
-    # Crear una figura para la humedad
-    humidity_fig = Figure(figsize=(5, 3), dpi=100)
-    humidity_canvas = FigureCanvasTkAgg(humidity_fig, master=root)
-    humidity_canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
     plt.ion()  # Habilita el modo interactivo de matplotlib
-
+    plt.figure()
     loop.run_until_complete(main())
-    root.mainloop()
