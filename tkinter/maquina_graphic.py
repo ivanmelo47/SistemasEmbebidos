@@ -85,7 +85,7 @@ def obtener_datos_sensor():
     return humidity, temperature
 
 # Función para actualizar los gráficos
-async def actualizar_grafico(i):
+def actualizar_grafico(i):
     global adquirir_datos
     if adquirir_datos:
         humidity, temperature = obtener_datos_sensor()
