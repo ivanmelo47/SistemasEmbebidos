@@ -10,6 +10,9 @@ import time
 sensor = Adafruit_DHT.DHT11
 pin = 4
 
+# Variables para controlar la adquisición de datos
+adquirir_datos = False
+
 # Función para obtener los datos del sensor
 def obtener_datos_sensor():
     humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
@@ -17,23 +20,35 @@ def obtener_datos_sensor():
 
 # Función para actualizar los gráficos
 def actualizar_grafico(i):
-    humidity, temperature = obtener_datos_sensor()
-    if humidity is not None and temperature is not None:
-        temperatura_label.config(text=f"Temperatura: {temperature:.2f}°C")
-        humedad_label.config(text=f"Humedad: {humidity:.2f}%")
-        xdata.append(time.time())
-        ydata_temp.append(temperature)
-        ydata_hum.append(humidity)
-        if len(xdata) > 20:
-            xdata.pop(0)
-            ydata_temp.pop(0)
-            ydata_hum.pop(0)
-        line_temp.set_data(xdata, ydata_temp)
-        line_hum.set_data(xdata, ydata_hum)
-        ax_temp.relim()
-        ax_temp.autoscale_view()
-        ax_hum.relim()
-        ax_hum.autoscale_view()
+    global adquirir_datos
+    if adquirir_datos:
+        humidity, temperature = obtener_datos_sensor()
+        if humidity is not None and temperature is not None:
+            temperatura_label.config(text=f"Temperatura: {temperature:.2f}°C")
+            humedad_label.config(text=f"Humedad: {humidity:.2f}%")
+            xdata.append(time.time())
+            ydata_temp.append(temperature)
+            ydata_hum.append(humidity)
+            if len(xdata) > 20:
+                xdata.pop(0)
+                ydata_temp.pop(0)
+                ydata_hum.pop(0)
+            line_temp.set_data(xdata, ydata_temp)
+            line_hum.set_data(xdata, ydata_hum)
+            ax_temp.relim()
+            ax_temp.autoscale_view()
+            ax_hum.relim()
+            ax_hum.autoscale_view()
+
+# Función para iniciar la adquisición de datos
+def iniciar_adquisicion():
+    global adquirir_datos
+    adquirir_datos = True
+
+# Función para detener la adquisición de datos
+def detener_adquisicion():
+    global adquirir_datos
+    adquirir_datos = False
 
 # Crear la ventana principal de Tkinter
 root = tk.Tk()
@@ -44,6 +59,12 @@ temperatura_label = ttk.Label(root, text="", font=("Helvetica", 14))
 temperatura_label.pack()
 humedad_label = ttk.Label(root, text="", font=("Helvetica", 14))
 humedad_label.pack()
+
+# Crear botones para iniciar y detener la adquisición de datos
+iniciar_button = ttk.Button(root, text="Iniciar", command=iniciar_adquisicion)
+iniciar_button.pack()
+detener_button = ttk.Button(root, text="Detener", command=detener_adquisicion)
+detener_button.pack()
 
 # Crear una figura de Matplotlib con dos subgráficos
 fig = Figure(figsize=(8, 6), dpi=100)
